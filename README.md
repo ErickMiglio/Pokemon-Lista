@@ -16,6 +16,10 @@ docker-compose up --build
 
 Acesse: http://localhost:8080
 
+## Deploy
+
+A aplicação está disponível online em: https://pokemon-lista-erickmiglio.vercel.app/
+
 ## Estrutura
 
 - `index.php` - Página principal com a lista de pokémons
