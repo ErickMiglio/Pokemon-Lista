@@ -1,4 +1,42 @@
 <?php
+function getPokemonData($limit = 151) {
+    $pokemons = [];
+    $apiUrl = 'https://pokeapi.co/api/v2/pokemon?limit=' . $limit;
+    
+    $response = @file_get_contents($apiUrl);
+    if ($response === false) {
+        return [];
+    }
+    
+    $data = json_decode($response, true);
+    if (!isset($data['results'])) {
+        return [];
+    }
+    
+    foreach ($data['results'] as $pokemon) {
+        $pokemonResponse = @file_get_contents($pokemon['url']);
+        if ($pokemonResponse === false) {
+            continue;
+        }
+        
+        $pokemonData = json_decode($pokemonResponse, true);
+        if (!$pokemonData) {
+            continue;
+        }
+        
+        $pokemons[] = [
+            'id' => $pokemonData['id'],
+            'name' => $pokemonData['name'],
+            'image' => $pokemonData['sprites']['front_default']
+        ];
+    }
+    
+    return $pokemons;
+}
+
+$pokemons = getPokemonData();
+?>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -59,36 +97,14 @@
 </head>
 <body>
     <h1>Primeira Geração de Pokémon</h1>
-    <div class="pokemon-grid" id="pokemon-grid"></div>
-
-    <script>
-        async function loadPokemons() {
-            try {
-                const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
-                const data = await response.json();
-                
-                const grid = document.getElementById('pokemon-grid');
-                
-                for (const pokemon of data.results) {
-                    const pokemonResponse = await fetch(pokemon.url);
-                    const pokemonData = await pokemonResponse.json();
-                    
-                    const card = document.createElement('div');
-                    card.className = 'pokemon-card';
-                    card.innerHTML = `
-                        <div class="id">#${String(pokemonData.id).padStart(3, '0')}</div>
-                        <img src="${pokemonData.sprites.front_default}" alt="${pokemon.name}">
-                        <div class="name">${pokemon.name}</div>
-                    `;
-                    grid.appendChild(card);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar Pokémon:', error);
-            }
-        }
-        
-        loadPokemons();
-    </script>
+    <div class="pokemon-grid">
+        <?php foreach ($pokemons as $pokemon): ?>
+            <div class="pokemon-card">
+                <div class="id">#<?php echo str_pad($pokemon['id'], 3, '0', STR_PAD_LEFT); ?></div>
+                <img src="<?php echo htmlspecialchars($pokemon['image']); ?>" alt="<?php echo htmlspecialchars($pokemon['name']); ?>">
+                <div class="name"><?php echo htmlspecialchars($pokemon['name']); ?></div>
+            </div>
+        <?php endforeach; ?>
+    </div>
 </body>
 </html>
-?>
